@@ -444,7 +444,7 @@ class Vc_ParamAnimation {
 	 * @return array
 	 * @since 4.4
 	 */
-	public function groupStyleByType( $styles, $type ) {
+	public function groupStyleByType( $styles, $type ) { // phpcs:ignore:CognitiveComplexity.Complexity.MaximumComplexity.TooHigh
 		$grouped = [];
 		foreach ( $styles as $group ) {
 			$inner_group = [ 'values' => [] ];
@@ -474,7 +474,7 @@ class Vc_ParamAnimation {
 	public function __construct( $settings, $value ) {
 		$this->settings = $settings;
 		$this->value = $value;
-		wp_register_style( 'vc_animate-css', vc_asset_url( 'lib/vendor/node_modules/animate.css/animate.min.css' ), [], WPB_VC_VERSION );
+		wp_register_style( 'vc_animate-css', vc_asset_url( 'lib/vendor/dist/animate.css/animate.min.css' ), [], WPB_VC_VERSION );
 	}
 
 	/**
@@ -483,7 +483,7 @@ class Vc_ParamAnimation {
 	 * @return string
 	 * @since 4.4
 	 */
-	public function render() {
+	public function render() { // phpcs:ignore:Generic.Metrics.CyclomaticComplexity.TooHigh, CognitiveComplexity.Complexity.MaximumComplexity.TooHigh
 		$output = '<div class="vc_row">';
 		wp_enqueue_style( 'vc_animate-css' );
 

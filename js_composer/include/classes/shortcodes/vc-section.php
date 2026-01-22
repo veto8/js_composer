@@ -40,7 +40,7 @@ class WPBakeryShortCode_Vc_Section extends WPBakeryShortCodesContainer {
 	 * Register shortcode scripts.
 	 */
 	protected function shortcodeScripts() {
-		wp_register_script( 'vc_jquery_skrollr_js', vc_asset_url( 'lib/vendor/node_modules/skrollr/dist/skrollr.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
+		wp_register_script( 'vc_jquery_skrollr_js', vc_asset_url( 'lib/vendor/dist/skrollr/dist/skrollr.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 		wp_register_script( 'vc_youtube_iframe_api_js', 'https://www.youtube.com/iframe_api', [], WPB_VC_VERSION, true );
 	}
 
@@ -115,7 +115,7 @@ class WPBakeryShortCode_Vc_Section extends WPBakeryShortCodesContainer {
 	 * @return string
 	 * @throws \Exception
 	 */
-	public function contentAdmin( $atts, $content = null ) {
+	public function contentAdmin( $atts, $content = null ) { // phpcs:ignore:CognitiveComplexity.Complexity.MaximumComplexity.TooHigh
 		$width = '';
 		$atts = shortcode_atts( $this->predefined_atts, $atts );
 
@@ -157,6 +157,6 @@ class WPBakeryShortCode_Vc_Section extends WPBakeryShortCodesContainer {
 		}
 		$output .= '</div>';
 
-		return $output;
+		return $output; // nosemgrep - we already escaped everything on this step.
 	}
 }

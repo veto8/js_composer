@@ -330,19 +330,18 @@ abstract class WPBakeryShortCode {
 	 * Prints out the styles needed to render the element icon for the back end interface.
 	 * Only performed if the 'icon' setting is a valid URL.
 	 *
-	 * @return void
 	 * @since  4.2
-	 * @modified 4.4
-	 * @author Benjamin Intal
+	 * @return void
 	 */
 	public function printIconStyles() {
 		if ( ! filter_var( $this->settings( 'icon' ), FILTER_VALIDATE_URL ) ) {
 			return;
 		}
-		$first_tag = 'style';
-		echo '
-            <' . esc_attr( $first_tag ) . '>
-                .vc_el-container #' . esc_attr( $this->settings['base'] ) . ' .vc_element-icon,
+
+		wp_register_style( 'wpb-register-elements-icons', false, [], WPB_VC_VERSION );
+		wp_enqueue_style( 'wpb-register-elements-icons' );
+
+		$style = '.vc_el-container #' . esc_attr( $this->settings['base'] ) . ' .vc_element-icon,
                 .wpb_' . esc_attr( $this->settings['base'] ) . ' > .wpb_element_wrapper > .wpb_element_title > .vc_element-icon,
                 .vc_el-container > #' . esc_attr( $this->settings['base'] ) . ' > .vc_element-icon,
                 .vc_el-container > #' . esc_attr( $this->settings['base'] ) . ' > .vc_element-icon[data-is-container="true"],
@@ -351,7 +350,8 @@ abstract class WPBakeryShortCode {
                 .compose_mode .vc_helper.vc_helper-' . esc_attr( $this->settings['base'] ) . ' > .vc_element-icon[data-is-container="true"],
                 .vc_helper.vc_helper-' . esc_attr( $this->settings['base'] ) . ' > .vc_element-icon[data-is-container="true"],
                 .wpb_' . esc_attr( $this->settings['base'] ) . ' > .wpb_element_wrapper > .wpb_element_title > .vc_element-icon,
-                .wpb_' . esc_attr( $this->settings['base'] ) . ' > .wpb_element_wrapper > .wpb_element_title > .vc_element-icon[data-is-container="true"] {
+                .wpb_' . esc_attr( $this->settings['base'] ) . ' > .wpb_element_wrapper > .wpb_element_title > .vc_element-icon[data-is-container="true"],
+                [title="' . esc_attr( $this->settings['base'] ) . '"] > .vc_element-icon {
                     background-position: 0 0;
                     background-image: url(' . esc_url( $this->settings['icon'] ) . ');
                     -webkit-background-size: contain;
@@ -359,8 +359,9 @@ abstract class WPBakeryShortCode {
                     -ms-background-size: contain;
                     -o-background-size: contain;
                     background-size: contain;
-                }
-            </' . esc_attr( $first_tag ) . '>';
+                }';
+
+		wp_add_inline_style( 'wpb-register-elements-icons', $style );
 	}
 
 	/**
@@ -501,7 +502,7 @@ abstract class WPBakeryShortCode {
 	 * @throws \Exception
 	 */
 	protected function content( $atts, $content = null ) {
-		return $this->loadTemplate( $atts, $content );
+		return $this->loadTemplate( $atts, $content ); // nosemgrep - escaping handled inside templates.
 	}
 
 	/**
@@ -570,7 +571,7 @@ abstract class WPBakeryShortCode {
 			$output .= $elem;
 		}
 
-		return $output;
+		return $output; // nosemgrep - we already escaped everything on this step.
 	}
 
 	/**
@@ -597,7 +598,7 @@ abstract class WPBakeryShortCode {
 	 * @return bool
 	 */
 	public function isEditor() {
-		return vc_is_editor();
+		return vc_is_frontend_editor();
 	}
 
 	/**
@@ -612,7 +613,7 @@ abstract class WPBakeryShortCode {
 	 * @return string
 	 * @throws \Exception
 	 */
-	public function output( $atts, $content = null, $base = '' ) {
+	public function output( $atts, $content = null, $base = '' ) { // phpcs:ignore:CognitiveComplexity.Complexity.MaximumComplexity.TooHigh
 		if ( '' !== $base ) {
 			_deprecated_argument( __METHOD__, '7.9', '$base' );
 		}
@@ -827,7 +828,7 @@ abstract class WPBakeryShortCode {
 	 * @return string
 	 * @throws \Exception
 	 */
-	public function getColumnControls( $controls, $extended_css = '' ) {
+	public function getColumnControls( $controls, $extended_css = '' ) { // phpcs:ignore:Generic.Metrics.CyclomaticComplexity.TooHigh, CognitiveComplexity.Complexity.MaximumComplexity.TooHigh
 		$controls_start = '<div class="vc_controls controls_element' . ( ! empty( $extended_css ) ? " {$extended_css}" : '' ) . '">';
 
 		$controls_end = '</div>';
@@ -864,7 +865,7 @@ abstract class WPBakeryShortCode {
 	 * @return array
 	 * @throws \Exception
 	 */
-	public function getControlsList() {
+	public function getControlsList() { // phpcs:ignore:CognitiveComplexity.Complexity.MaximumComplexity.TooHigh
 		$editAccess = vc_user_access_check_shortcode_edit( $this->shortcode );
 		$allAccess = vc_user_access_check_shortcode_all( $this->shortcode );
 		if ( $allAccess ) {
@@ -953,7 +954,7 @@ abstract class WPBakeryShortCode {
 	 *
 	 * @return string
 	 */
-	public function singleParamHtmlHolder( $param, $value ) {
+	public function singleParamHtmlHolder( $param, $value ) { // phpcs:ignore:Generic.Metrics.CyclomaticComplexity.TooHigh
 		$value = apply_filters( 'vc_wpbakeryshortcode_single_param_html_holder_value', $value, $param, $this->settings, $this->atts );
 		$output = '';
 		// Compatibility fixes.
@@ -1110,7 +1111,7 @@ abstract class WPBakeryShortCode {
 	 * @throws \Exception
 	 * @since 4.5
 	 */
-	protected function customMarkup( $markup, $content = '' ) {
+	protected function customMarkup( $markup, $content = '' ) { // phpcs:ignore:Generic.Metrics.CyclomaticComplexity.TooHigh, CognitiveComplexity.Complexity.MaximumComplexity.TooHigh
 		$pattern = '/\{\{([\s\S][^\n]+?)\}\}|<%([\s\S][^\n]+?)%>|%([\s\S][^\n]+?)%/';
 		preg_match_all( $pattern, $markup, $matches, PREG_SET_ORDER );
 		if ( is_array( $matches ) && ! empty( $matches ) ) {

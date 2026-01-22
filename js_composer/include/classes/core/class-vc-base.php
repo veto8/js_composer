@@ -605,15 +605,15 @@ class Vc_Base {
 	 * @since  3.1
 	 */
 	public function frontCss() {
-		wp_register_style( 'wpb_flexslider', vc_asset_url( 'lib/vendor/node_modules/flexslider/flexslider.min.css' ), [], WPB_VC_VERSION );
-		wp_register_style( 'nivo-slider-css', vc_asset_url( 'lib/vendor/node_modules/nivo-slider/nivo-slider.min.css' ), [], WPB_VC_VERSION );
-		wp_register_style( 'nivo-slider-theme', vc_asset_url( 'lib/vendor/node_modules/nivo-slider/themes/default/default.min.css' ), [ 'nivo-slider-css' ], WPB_VC_VERSION );
+		wp_register_style( 'wpb_flexslider', vc_asset_url( 'lib/vendor/dist/flexslider/flexslider.min.css' ), [], WPB_VC_VERSION );
+		wp_register_style( 'nivo-slider-css', vc_asset_url( 'lib/vendor/dist/nivo-slider/nivo-slider.min.css' ), [], WPB_VC_VERSION );
+		wp_register_style( 'nivo-slider-theme', vc_asset_url( 'lib/vendor/dist/nivo-slider/themes/default/default.min.css' ), [ 'nivo-slider-css' ], WPB_VC_VERSION );
 		wp_register_style( 'prettyphoto', vc_asset_url( 'lib/vendor/prettyphoto/css/prettyPhoto.min.css' ), [], WPB_VC_VERSION );
 		wp_register_style( 'isotope-css', vc_asset_url( 'css/lib/isotope/isotope.min.css' ), [], WPB_VC_VERSION );
-		wp_register_style( 'vc_font_awesome_5_shims', vc_asset_url( 'lib/vendor/node_modules/@fortawesome/fontawesome-free/css/v4-shims.min.css' ), [], WPB_VC_VERSION );
-		wp_register_style( 'vc_font_awesome_6', vc_asset_url( 'lib/vendor/node_modules/@fortawesome/fontawesome-free/css/all.min.css' ), [ 'vc_font_awesome_5_shims' ], WPB_VC_VERSION );
-		wp_register_style( 'vc_animate-css', vc_asset_url( 'lib/vendor/node_modules/animate.css/animate.min.css' ), [], WPB_VC_VERSION );
-		wp_register_style( 'lightbox2', vc_asset_url( 'lib/vendor/node_modules/lightbox2/dist/css/lightbox.min.css' ), [], WPB_VC_VERSION );
+		wp_register_style( 'vc_font_awesome_5_shims', vc_asset_url( 'lib/vendor/dist/@fortawesome/fontawesome-free/css/v4-shims.min.css' ), [], WPB_VC_VERSION );
+		wp_register_style( 'vc_font_awesome_6', vc_asset_url( 'lib/vendor/dist/@fortawesome/fontawesome-free/css/all.min.css' ), [ 'vc_font_awesome_5_shims' ], WPB_VC_VERSION );
+		wp_register_style( 'vc_animate-css', vc_asset_url( 'lib/vendor/dist/animate.css/animate.min.css' ), [], WPB_VC_VERSION );
+		wp_register_style( 'lightbox2', vc_asset_url( 'lib/vendor/dist/lightbox2/dist/css/lightbox.min.css' ), [], WPB_VC_VERSION );
 		$front_css_file = vc_asset_url( 'css/js_composer.min.css' );
 
 		wp_register_style( 'js_composer_front', $front_css_file, [], WPB_VC_VERSION );
@@ -650,7 +650,7 @@ class Vc_Base {
 	 */
 	public function frontJsRegister() {
 		wp_register_script( 'prettyphoto', vc_asset_url( 'lib/vendor/prettyphoto/js/jquery.prettyPhoto.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
-		wp_register_script( 'lightbox2', vc_asset_url( 'lib/vendor/node_modules/lightbox2/dist/js/lightbox.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
+		wp_register_script( 'lightbox2', vc_asset_url( 'lib/vendor/dist/lightbox2/dist/js/lightbox.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 		wp_register_script( 'vc_waypoints', vc_asset_url( 'lib/vc/vc_waypoints/vc-waypoints.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 
 		// @deprecated used in old tabs.
@@ -660,11 +660,11 @@ class Vc_Base {
 		], WPB_VC_VERSION, true );
 
 		// used in vc_gallery, old grid.
-		wp_register_script( 'isotope', vc_asset_url( 'lib/vendor/node_modules/isotope-layout/dist/isotope.pkgd.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
+		wp_register_script( 'isotope', vc_asset_url( 'lib/vendor/dist/isotope-layout/dist/isotope.pkgd.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 
-		wp_register_script( 'twbs-pagination', vc_asset_url( 'lib/vendor/node_modules/twbs-pagination/jquery.twbsPagination.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
-		wp_register_script( 'nivo-slider', vc_asset_url( 'lib/vendor/node_modules/nivo-slider/jquery.nivo.slider.pack.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
-		wp_register_script( 'wpb_flexslider', vc_asset_url( 'lib/vendor/node_modules/flexslider/jquery.flexslider-min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
+		wp_register_script( 'twbs-pagination', vc_asset_url( 'lib/vendor/dist/twbs-pagination/jquery.twbsPagination.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
+		wp_register_script( 'nivo-slider', vc_asset_url( 'lib/vendor/dist/nivo-slider/jquery.nivo.slider.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
+		wp_register_script( 'wpb_flexslider', vc_asset_url( 'lib/vendor/dist/flexslider/jquery.flexslider.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 		wp_register_script( 'wpb_composer_front_js', vc_asset_url( 'js/dist/js_composer_front.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 
 		/**
@@ -770,7 +770,7 @@ class Vc_Base {
 	 * @since  4.2
 	 */
 	public function bodyClass( $classes ) {
-		return js_composer_body_class( $classes );
+		return wpb_body_class( $classes );
 	}
 
 	/**
@@ -809,11 +809,12 @@ class Vc_Base {
 	 * @since 4.2
 	 */
 	public function fixPContent( $content = null ) {
-		if ( $content ) {
+		$action = vc_post_param( 'action' );
+		if ( $content && 'vc_load_shortcode' !== $action ) {
 			$s = [
 				'/' . preg_quote( '</div>', '/' ) . '[\s\n\f]*' . preg_quote( '</p>', '/' ) . '/i',
-				'/' . preg_quote( '<p>', '/' ) . '[\s\n\f]*' . preg_quote( '<div ', '/' ) . '/i',
-				'/' . preg_quote( '<p>', '/' ) . '[\s\n\f]*' . preg_quote( '<section ', '/' ) . '/i',
+				'/' . preg_quote( '<p>', '/' ) . '[\s\n\f]*' . preg_quote( '<div', '/' ) . '[\s\n\f]*/i',
+				'/' . preg_quote( '<p>', '/' ) . '[\s\n\f]*' . preg_quote( '<section', '/' ) . '[\s\n\f]*/i',
 				'/' . preg_quote( '</section>', '/' ) . '[\s\n\f]*' . preg_quote( '</p>', '/' ) . '/i',
 			];
 			$r = [
@@ -889,6 +890,16 @@ class Vc_Base {
 			'row_background_image' => esc_html__( 'Row background image', 'js_composer' ),
 			'column_background_color' => esc_html__( 'Column background color', 'js_composer' ),
 			'column_background_image' => esc_html__( 'Column background image', 'js_composer' ),
+			'grid_container_background_color' => esc_html__( 'Grid container background color', 'js_composer' ),
+			'grid_container_background_image' => esc_html__( 'Grid container background image', 'js_composer' ),
+			'grid_container_item_background_color' => esc_html__( 'Grid item background color', 'js_composer' ),
+			'grid_container_item_background_image' => esc_html__( 'Grid item background image', 'js_composer' ),
+			'flexbox_container_background_color' => esc_html__( 'Flexbox container background color', 'js_composer' ),
+			'flexbox_container_background_image' => esc_html__( 'Flexbox container background image', 'js_composer' ),
+			'flexbox_container_item_background_color' => esc_html__( 'Flexbox item background color', 'js_composer' ),
+			'flexbox_container_item_background_image' => esc_html__( 'Flexbox item background image', 'js_composer' ),
+			'gitem_background_image' => esc_html__( 'Grid builder item background image', 'js_composer' ),
+			'gitem_background_color' => esc_html__( 'Grid builder item background color', 'js_composer' ),
 			'guides_on' => esc_html__( 'Guides ON', 'js_composer' ),
 			'guides_off' => esc_html__( 'Guides OFF', 'js_composer' ),
 			'template_save' => esc_html__( 'New template successfully saved.', 'js_composer' ),
@@ -898,6 +909,8 @@ class Vc_Base {
 			'template_is_empty' => esc_html__( 'Template is empty: There is no content to be saved as a template.', 'js_composer' ),
 			'template_save_error' => esc_html__( 'Error while saving template.', 'js_composer' ),
 			'page_settings_updated' => esc_html__( 'Page settings updated!', 'js_composer' ),
+			'custom_code_updated' => esc_html__( 'Custom CSS/JS updated!', 'js_composer' ),
+			'seo_settings_updated' => esc_html__( 'SEO settings updated!', 'js_composer' ),
 			'update_all' => esc_html__( 'Update all', 'js_composer' ),
 			'confirm_to_leave' => esc_html__( 'The changes you made will be lost if you navigate away from this page.', 'js_composer' ),
 			'inline_element_saved' => esc_html__( '%s saved!', 'js_composer' ),
@@ -908,6 +921,8 @@ class Vc_Base {
 			'gfonts_loading_google_font' => esc_html__( 'Loading Font...', 'js_composer' ),
 			'gfonts_unable_to_load_google_fonts' => esc_html__( 'Unable to load Google Fonts', 'js_composer' ),
 			'no_title_parenthesis' => sprintf( '(%s)', esc_html__( 'no title', 'js_composer' ) ),
+			'no_elements_found' => esc_html__( 'No elements found', 'js_composer' ),
+			'no_addons_found' => esc_html__( 'No addons found', 'js_composer' ),
 			'error_while_saving_image_filtered' => esc_html__( 'Error while applying filter to the image. Check your server and memory settings.', 'js_composer' ),
 			'ui_saved' => sprintf( '<i class="vc-composer-icon vc-c-icon-check"></i> %s', esc_html__( 'Saved!', 'js_composer' ) ),
 			'ui_danger' => sprintf( '<i class="vc-composer-icon vc-c-icon-close"></i> %s', esc_html__( 'Failed to Save!', 'js_composer' ) ),
@@ -919,7 +934,13 @@ class Vc_Base {
 			'vc_successfully_updated' => esc_html__( 'Successfully updated!', 'js_composer' ),
 			'gutenbergDoesntWorkProperly' => esc_html__( 'Gutenberg plugin doesn\'t work properly. Please check Gutenberg plugin.', 'js_composer' ),
 			'unfiltered_html_access' => esc_html__( 'Custom HTML is disabled for your user role. Please contact your site Administrator to change your capabilities.', 'js_composer' ),
-			'not_editable_post' => sprintf( '%s %s %s', esc_html__( 'This', 'js_composer' ), get_post_type() ? get_post_type() : 'post', esc_html__( 'can not be edited with WPBakery since it is missing a WordPress default content area.', 'js_composer' ) ),
+			'not_editable_post' => sprintf(
+				'%s %s %s %s',
+				esc_html__( 'This', 'js_composer' ),
+				get_post_type() ? get_post_type() : 'post',
+				esc_html__( 'can not be edited with WPBakery since it is missing a WordPress default content area. ', 'js_composer' ),
+				'<a href="https://kb.wpbakery.com/docs/faq/how-to-fix-this-page-can-not-be-edited-with-wpbakery-since-it-is-missing-a-wordpress-default-content-area/" target="_blank" rel="noreferrer noopener">Learn how to fix this issue</a>.'
+			),
 			'generate' => esc_html__( 'Generate', 'js_composer' ),
 			'regenerate' => esc_html__( 'Regenerate', 'js_composer' ),
 			'problems' => esc_html__( 'Problems', 'js_composer' ),

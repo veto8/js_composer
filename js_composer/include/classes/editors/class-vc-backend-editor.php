@@ -136,6 +136,7 @@ class Vc_Backend_Editor extends Vc_Editor {
 			'editor' => $this,
 			'post' => $this->post,
 			'wpb_vc_status' => $this->getEditorPostStatus(),
+			'wpb_vc_editor_type' => $this->get_editor_post_type(),
 		] );
 		add_action( 'admin_footer', [
 			$this,
@@ -162,6 +163,27 @@ class Vc_Backend_Editor extends Vc_Editor {
 		}
 
 		return $wpb_vc_status;
+	}
+
+	/**
+	 * Get backend editor type (classic or backend).
+	 *
+	 * @since 8.5
+	 * @param int|null $post_id
+	 * @return string
+	 */
+	public function get_editor_post_type( $post_id = null ) {
+		if ( null === $post_id ) {
+			$post_id = get_the_ID();
+		}
+
+		if ( ! $post_id ) {
+			return '';
+		}
+
+		$editor_type = get_post_meta( $post_id, '_wpb_vc_editor_type', true );
+
+		return $editor_type ? $editor_type : 'backend';
 	}
 
 
@@ -251,14 +273,19 @@ class Vc_Backend_Editor extends Vc_Editor {
 		], WPB_VC_VERSION, true );
 		wp_register_script( 'wpb_php_js', vc_asset_url( 'lib/vendor/php.default/php.default.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 		// used as polyfill for JSON.stringify and etc.
-		wp_register_script( 'wpb_json-js', vc_asset_url( 'lib/vendor/node_modules/json-js/json2.min.js' ), [], WPB_VC_VERSION, true );
+		wp_register_script( 'wpb_json-js', vc_asset_url( 'lib/vendor/dist/json-js/json2.min.js' ), [], WPB_VC_VERSION, true );
 		// used in post settings editor.
-		wp_register_script( 'ace-editor', vc_asset_url( 'lib/vendor/node_modules/ace-builds/src-min-noconflict/ace.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
+		wp_register_script( 'ace-editor', vc_asset_url( 'lib/vendor/dist/ace-builds/src-min-noconflict/ace.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 		wp_register_script( 'wpb-code-editor', vc_asset_url( 'js/dist/post-code-editor.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 		wp_register_script( 'webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js', [], WPB_VC_VERSION, true ); // Google Web Font CDN.
-		wp_register_script( 'wpb-popper', vc_asset_url( 'lib/vendor/node_modules/@popperjs/core/dist/umd/popper.min.js' ), [], WPB_VC_VERSION, true );
-		wp_register_script( 'pickr', vc_asset_url( 'lib/vendor/node_modules/@simonwep/pickr/dist/pickr.es5.min.js' ), [], WPB_VC_VERSION, true );
-
+		wp_register_script( 'wpb-popper', vc_asset_url( 'lib/vendor/dist/@popperjs/core/dist/umd/popper.min.js' ), [], WPB_VC_VERSION, true );
+		wp_register_script( 'pickr', vc_asset_url( 'lib/vendor/dist/@simonwep/pickr/dist/pickr.es5.min.js' ), [], WPB_VC_VERSION, true );
+		// Conditionally register mousetrap based on shortcuts setting.
+		$shortcuts_disabled = get_option( 'wpb_js_shortcuts', false );
+		if ( ! $shortcuts_disabled ) {
+			wp_register_script( 'mousetrap', vc_asset_url( 'lib/vendor/dist/mousetrap/mousetrap.min.js' ), [], WPB_VC_VERSION, true );
+		}
+		wp_register_script( 'wpb-dompurify', vc_asset_url( 'lib/vendor/dist/dompurify/dist/purify.min.js' ), [], WPB_VC_VERSION, true );
 		vc_modules_manager()->register_modules_script();
 
 		wp_localize_script( 'vc-backend-actions-js', 'i18nLocale', wpbakery()->getEditorsLocale() );
@@ -287,16 +314,18 @@ class Vc_Backend_Editor extends Vc_Editor {
 			 *
 			 * @todo check vc_add-element-deprecated-warning for fa icon usage ( set to our font )
 			 */
-			wp_register_style( 'vc_font_awesome_5_shims', vc_asset_url( 'lib/vendor/node_modules/@fortawesome/fontawesome-free/css/v4-shims.min.css' ), [], WPB_VC_VERSION );
-			wp_register_style( 'vc_font_awesome_6', vc_asset_url( 'lib/vendor/node_modules/@fortawesome/fontawesome-free/css/all.min.css' ), [ 'vc_font_awesome_5_shims' ], WPB_VC_VERSION );
+			wp_register_style( 'vc_font_awesome_5_shims', vc_asset_url( 'lib/vendor/dist/@fortawesome/fontawesome-free/css/v4-shims.min.css' ), [], WPB_VC_VERSION );
+			wp_register_style( 'vc_font_awesome_6', vc_asset_url( 'lib/vendor/dist/@fortawesome/fontawesome-free/css/all.min.css' ), [ 'vc_font_awesome_5_shims' ], WPB_VC_VERSION );
 			/**
 			 * Definitely used in edit form param: css_animation, but currently vc_add_shortcode_param doesn't accept css.
 			 *
 			 * @todo check for usages
 			 */
-			wp_register_style( 'vc_animate-css', vc_asset_url( 'lib/vendor/node_modules/animate.css/animate.min.css' ), [], WPB_VC_VERSION );
-			wp_register_style( 'pickr', vc_asset_url( 'lib/vendor/node_modules/@simonwep/pickr/dist/themes/classic.min.css' ), [], WPB_VC_VERSION, false );
-			wp_register_style( 'vc_google_fonts', 'https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,500&display=swap', [], WPB_VC_VERSION );
+			wp_register_style( 'vc_animate-css', vc_asset_url( 'lib/vendor/dist/animate.css/animate.min.css' ), [], WPB_VC_VERSION );
+			wp_register_style( 'pickr', vc_asset_url( 'lib/vendor/dist/@simonwep/pickr/dist/themes/classic.min.css' ), [], WPB_VC_VERSION, false );
+			// When version is added, we can't use multiple fonts, it only loads the last font from the url.
+			// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+			wp_register_style( 'vc_google_fonts', 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,500;1,14..32,500&family=Open+Sans:ital,wght@1,600&family=Roboto:wght@400;700&family=Roboto:ital,wght@1,500&family=Sora:wght@600&display=swap&ver=' . WPB_VC_VERSION, [], null );
 		}
 
 		do_action( 'wpb_after_register_backend_editor_css', $this );
@@ -326,6 +355,7 @@ class Vc_Backend_Editor extends Vc_Editor {
 		];
 		$dependencies = [
 			'vc_accordion_script',
+			'wpb-dompurify',
 			'wpb_php_js',
 			// used in our files [e.g. edit form saving sprintf].
 			'wpb_json-js',
@@ -343,6 +373,11 @@ class Vc_Backend_Editor extends Vc_Editor {
 			vc_user_access()->part( 'shortcodes' )->can( 'vc_single_image_all' )->get() === true
 		) {
 			$dependencies[] = 'vc-image-drop';
+		}
+
+		// Conditionally add mousetrap when shortcuts are enabled.
+		if ( Vc_Settings::areShortcutsEnabled() ) {
+			$dependencies[] = 'mousetrap';
 		}
 
 		$common = apply_filters( 'wpb_enqueue_backend_editor_js', array_merge( $wp_dependencies, $dependencies ) );
@@ -462,11 +497,6 @@ class Vc_Backend_Editor extends Vc_Editor {
 	/**
 	 * Get attach_images element param data.
 	 * We use it to get gallery elements data when editing elements.
-	 *
-	 * @since 8.3
-	 */
-	/**
-	 * Get gallery element html.
 	 *
 	 * @since 8.3
 	 */

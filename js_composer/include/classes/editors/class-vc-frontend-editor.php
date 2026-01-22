@@ -237,6 +237,10 @@ class Vc_Frontend_Editor extends Vc_Editor {
 			'setEmptyTitlePlaceholder',
 		], 10, 2 );
 
+		add_action( 'the_post', [ $this, 'add_controls_shortcodes' ] );
+
+		add_action( 'the_post', [ $this, 'add_welcome_block_shortcode' ] );
+
 		add_action( 'the_post', [
 			$this,
 			'parseEditableContent',
@@ -312,23 +316,8 @@ class Vc_Frontend_Editor extends Vc_Editor {
 
 		$post_id = (int) vc_get_param( 'vc_post_id' );
 		if ( $post_id > 0 && $post->ID === $post_id && ! defined( 'VC_LOADING_EDITABLE_CONTENT' ) ) {
-			$post_content = '';
 			define( 'VC_LOADING_EDITABLE_CONTENT', true );
-			remove_filter( 'the_content', 'wpautop' );
-			do_action( 'vc_load_shortcode' );
-			$post_content .= $this->getPageShortcodesByContent( $post->post_content );
-			ob_start();
-			vc_include_template(
-				'editors/partials/vc_welcome_block.tpl.php',
-				[ 'editor' => 'frontend' ]
-			);
-			$post_content .= ob_get_clean();
-
-			ob_start();
-			vc_include_template( 'editors/partials/post_shortcodes.tpl.php', [ 'editor' => $this ] );
-			$post_shortcodes = ob_get_clean();
-			$custom_tag = 'script';
-			$this->vc_post_content = '<' . $custom_tag . ' type="template/html" id="vc_template-post-content" style="display:none">' . rawurlencode( apply_filters( 'the_content', $post_content ) ) . '</' . $custom_tag . '>' . $post_shortcodes;
+			$this->vc_post_content = $this->get_front_editor_content( $post );
 			// We already used the_content filter, we need to remove it to avoid double-using.
 			remove_all_filters( 'the_content' );
 			// Used for just returning $post->post_content.
@@ -337,6 +326,57 @@ class Vc_Frontend_Editor extends Vc_Editor {
 				'editableContent',
 			] );
 		}
+	}
+
+	/**
+	 * Get content for frontend editor.
+	 *
+	 * @param WP_Post $post
+	 *
+	 * @since 8.7
+	 * @return string
+	 */
+	public function get_front_editor_content( $post ) {
+		$post_content = $this->get_post_content( $post );
+
+		$post_content .= '[wpb-front-editor-welcome-block]';
+
+		$post_content = apply_filters( 'the_content', $post_content );
+
+		$post_shortcodes = $this->get_post_shortcodes_template();
+
+		$custom_tag = 'script';
+		return '<' . $custom_tag .
+				' type="template/html" id="vc_template-post-content" style="display:none">' . rawurlencode( $post_content ) .
+			'</' . $custom_tag . '>' .
+			$post_shortcodes;
+	}
+
+	/**
+	 * Get post shortcodes template for frontend editor.
+	 *
+	 * @since 8.7
+	 * @return string
+	 */
+	public function get_post_shortcodes_template() {
+		return vc_get_template(
+			'editors/partials/post_shortcodes.tpl.php',
+			[ 'editor' => $this ]
+		);
+	}
+
+	/**
+	 * Get post-content.
+	 *
+	 * @note we provide some additional frontend editor elements controls to post content.
+	 *
+	 * @since 8.7
+	 * @param WP_Post $post
+	 * @return string
+	 */
+	public function get_post_content( $post ) {
+		do_action( 'vc_load_shortcode' );
+		return $this->getPageShortcodesByContent( $post->post_content );
 	}
 
 	/**
@@ -424,27 +464,7 @@ class Vc_Frontend_Editor extends Vc_Editor {
 	public static function shortcodesRegexp() {
 		$tagnames = array_keys( WPBMap::getShortCodes() );
 		$tagregexp = implode( '|', array_map( 'preg_quote', $tagnames ) );
-		// WARNING from shortcodes.php! Do not change this regex without changing do_shortcode_tag() and strip_shortcode_tag()
-		// Also, see shortcode_unautop() and shortcode.js.
-        // phpcs:disable: Generic.Strings.UnnecessaryStringConcat.Found
-		return '\\[' // Opening bracket.
-			. '(\\[?)' // 1: Optional second opening bracket for escaping shortcodes: [[tag]].
-			. "($tagregexp)" // 2: Shortcode name.
-			. '(?![\\w\-])' // Not followed by word character or hyphen.
-			. '(' // 3: Unroll the loop: Inside the opening shortcode tag.
-			. '[^\\]\\/]*' // Not a closing bracket or forward slash.
-			. '(?:' . '\\/(?!\\])' // A forward slash not followed by a closing bracket.
-			. '[^\\]\\/]*' // Not a closing bracket or forward slash.
-			. ')*?' . ')' . '(?:' . '(\\/)' // 4: Self closing tag.
-			. '\\]' // ... and closing bracket.
-			. '|' . '\\]' // Closing bracket.
-			. '(?:' . '(' // 5: Unroll the loop: Optionally, anything between the opening and closing shortcode tags.
-			. '[^\\[]*+' // Not an opening bracket.
-			. '(?:' . '\\[(?!\\/\\2\\])' // An opening bracket not followed by the closing shortcode tag.
-			. '[^\\[]*+' // Not an opening bracket.
-			. ')*+' . ')' . '\\[\\/\\2\\]' // Closing shortcode tag.
-			. ')?' . ')' . '(\\]?)'; // 6: Optional second closing brocket for escaping shortcodes: [[tag]].
-            // phpcs:enable: Generic.Strings.UnnecessaryStringConcat.Found
+		return vc_get_shortcode_regex( $tagregexp );
 	}
 
 	/**
@@ -452,7 +472,7 @@ class Vc_Frontend_Editor extends Vc_Editor {
 	 */
 	public function setPost() {
 		global $post, $wp_query;
-		$this->post = get_post(); // fixes #1342 if no get/post params set.
+		$this->post = get_post();
 		$this->post_id = vc_get_param( 'post_id' );
 		if ( vc_post_param( 'post_id' ) ) {
 			$this->post_id = vc_post_param( 'post_id' );
@@ -511,19 +531,7 @@ class Vc_Frontend_Editor extends Vc_Editor {
 		wpbakery()->registerAdminCss(); // bc.
 		wpbakery()->registerAdminJavascript(); // bc.
 		if ( $this->post && 'auto-draft' === $this->post->post_status ) {
-			$post_data = [
-				'ID' => $this->post_id,
-				'post_status' => 'draft',
-				'post_title' => '',
-			];
-			add_filter( 'wp_insert_post_empty_content', [
-				$this,
-				'allowInsertEmptyPost',
-			] );
-			wp_update_post( $post_data, true );
-			$this->post->post_status = 'draft';
-			$this->post->post_title = '';
-
+			$this->set_new_post_data();
 		}
 		add_filter( 'admin_body_class', [
 			$this,
@@ -557,6 +565,30 @@ class Vc_Frontend_Editor extends Vc_Editor {
 		] );
 		$this->render( 'editor' );
 		die();
+	}
+
+	/**
+	 * Sets the new post data.
+	 *
+	 * @since 8.5
+	 */
+	public function set_new_post_data() {
+		$post_data = [
+			'ID' => $this->post_id,
+			'post_status' => 'draft',
+			'post_title' => '',
+		];
+
+		add_filter( 'wp_insert_post_empty_content', [
+			$this,
+			'allowInsertEmptyPost',
+		] );
+
+		$post_data = apply_filters( 'vc_frontend_editor_new_post_data', $post_data, $this->post );
+
+		wp_update_post( $post_data, true );
+		$this->post->post_status = 'draft';
+		$this->post->post_title = '';
 	}
 
 	/**
@@ -765,7 +797,7 @@ class Vc_Frontend_Editor extends Vc_Editor {
 		wp_enqueue_style( 'js_composer_front' );
 		wp_enqueue_style( 'vc_inline_css', vc_asset_url( 'css/js_composer_frontend_editor_iframe.min.css' ), [], WPB_VC_VERSION );
 		wp_enqueue_script( 'vc_waypoints' );
-		wp_enqueue_script( 'wpb_scrollTo_js', vc_asset_url( 'lib/vendor/node_modules/jquery.scrollto/jquery.scrollTo.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
+		wp_enqueue_script( 'wpb_scrollTo_js', vc_asset_url( 'lib/vendor/dist/jquery.scrollto/jquery.scrollTo.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 
 		wp_enqueue_script( 'wpb_php_js', vc_asset_url( 'lib/vendor/php.default/php.default.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 		wp_enqueue_script( 'vc_inline_iframe_js', vc_asset_url( 'js/dist/page_editable.min.js' ), [
@@ -795,7 +827,9 @@ class Vc_Frontend_Editor extends Vc_Editor {
 				ob_start();
 				_print_styles();
 				print_head_scripts();
-				wp_enqueue_block_template_skip_link();
+				if ( function_exists( 'wp_enqueue_block_template_skip_link' ) ) {
+					wp_enqueue_block_template_skip_link();
+				}
 				wp_footer();
 				$output .= ob_get_clean();
 				$output .= '</div>';
@@ -865,7 +899,7 @@ class Vc_Frontend_Editor extends Vc_Editor {
 	 * @return mixed|void
 	 * @throws \Exception
 	 */
-	public function renderShortcodes( array $shortcodes ) {
+	public function renderShortcodes( array $shortcodes ) { // phpcs:ignore:CognitiveComplexity.Complexity.MaximumComplexity.TooHigh
 		$this->enqueueRequired( true );
 		$output = '';
 		foreach ( $shortcodes as $shortcode ) {
@@ -882,7 +916,17 @@ class Vc_Frontend_Editor extends Vc_Editor {
 
 						$shortcode['string'] = str_replace( '[vc_gutenberg', '[vc_gutenberg do_blocks="true" ', $shortcode['string'] );
 
-						$output .= '<div class="vc_element" data-shortcode-controls="' . esc_attr( wp_json_encode( $shortcode_obj->shortcodeClass()->getControlsList() ) ) . '" data-container="' . esc_attr( $is_container ) . '" data-model-id="' . $shortcode['id'] . '">' . $this->wrapperStart() . do_shortcode( stripslashes( $shortcode['string'] ) ) . $this->wrapperEnd() . '</div>';
+						$atts = [
+							'class' => 'vc_element',
+							'data-shortcode-controls' => implode( ',', $shortcode_obj->shortcodeClass()->getControlsList() ),
+							'data-container' => $is_container,
+							'data-model-id' => $shortcode['id'],
+						];
+
+						$output .=
+							vc_get_template( 'editors/partials/front-editor-control-start.tpl.php', [ 'atts' => $atts ] ) .
+							$this->wrapperStart() . apply_filters( 'the_content', stripslashes( $shortcode['string'] ) ) . $this->wrapperEnd() .
+							vc_get_template( 'editors/partials/front-editor-control-end.tpl.php' );
 						$output .= '</div>';
 					}
 				}
@@ -924,22 +968,28 @@ class Vc_Frontend_Editor extends Vc_Editor {
 	 * Registers scripts for the frontend editor.
 	 */
 	public function registerJs() {
-		wp_register_script( 'vc_bootstrap_js', vc_asset_url( 'lib/vendor/node_modules/bootstrap3/dist/js/bootstrap.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
+		wp_register_script( 'vc_bootstrap_js', vc_asset_url( 'lib/vendor/dist/bootstrap3/dist/js/bootstrap.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 		wp_register_script( 'vc_accordion_script', vc_asset_url( 'lib/vc/vc_accordion/vc-accordion.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 		wp_register_script( 'wpb_php_js', vc_asset_url( 'lib/vendor/php.default/php.default.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 		// used as polyfill for JSON.stringify and etc.
-		wp_register_script( 'wpb_json-js', vc_asset_url( 'lib/vendor/node_modules/json-js/json2.min.js' ), [], WPB_VC_VERSION, true );
+		wp_register_script( 'wpb_json-js', vc_asset_url( 'lib/vendor/dist/json-js/json2.min.js' ), [], WPB_VC_VERSION, true );
 		// used in post settings editor.
-		wp_register_script( 'ace-editor', vc_asset_url( 'lib/vendor/node_modules/ace-builds/src-min-noconflict/ace.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
+		wp_register_script( 'ace-editor', vc_asset_url( 'lib/vendor/dist/ace-builds/src-min-noconflict/ace.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 		wp_register_script( 'wpb-code-editor', vc_asset_url( 'js/dist/post-code-editor.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 		wp_register_script( 'webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js', [], WPB_VC_VERSION, true ); // Google Web Font CDN.
-		wp_register_script( 'wpb_scrollTo_js', vc_asset_url( 'lib/vendor/node_modules/jquery.scrollto/jquery.scrollTo.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
+		wp_register_script( 'wpb_scrollTo_js', vc_asset_url( 'lib/vendor/dist/jquery.scrollto/jquery.scrollTo.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 		wp_register_script( 'vc_accordion_script', vc_asset_url( 'lib/vc/vc_accordion/vc-accordion.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
-		wp_register_script( 'wpb-popper', vc_asset_url( 'lib/vendor/node_modules/@popperjs/core/dist/umd/popper.min.js' ), [], WPB_VC_VERSION, true );
+		wp_register_script( 'wpb-popper', vc_asset_url( 'lib/vendor/dist/@popperjs/core/dist/umd/popper.min.js' ), [], WPB_VC_VERSION, true );
 		wp_register_script( 'vc-image-drop', vc_asset_url( 'js/dist/image-drop.min.js' ), [ 'jquery-core' ], WPB_VC_VERSION, true );
 		wp_register_script( 'vc-frontend-editor-min-js', vc_asset_url( 'js/dist/frontend-editor.min.js' ), [], WPB_VC_VERSION, true );
-		wp_register_script( 'pickr', vc_asset_url( 'lib/vendor/node_modules/@simonwep/pickr/dist/pickr.es5.min.js' ), [], WPB_VC_VERSION, true );
-		wp_register_script( 'select2', vc_asset_url( 'lib/vendor/node_modules/select2/dist/js/select2.min.js' ), [], WPB_VC_VERSION, true );
+		wp_register_script( 'pickr', vc_asset_url( 'lib/vendor/dist/@simonwep/pickr/dist/pickr.es5.min.js' ), [], WPB_VC_VERSION, true );
+		wp_register_script( 'select2', vc_asset_url( 'lib/vendor/dist/select2/dist/js/select2.min.js' ), [], WPB_VC_VERSION, true );
+		// Conditionally register mousetrap based on shortcuts setting.
+		$shortcuts_disabled = get_option( 'wpb_js_shortcuts', false );
+		if ( ! $shortcuts_disabled ) {
+			wp_register_script( 'mousetrap', vc_asset_url( 'lib/vendor/dist/mousetrap/mousetrap.min.js' ), [], WPB_VC_VERSION, true );
+		}
+		wp_register_script( 'wpb-dompurify', vc_asset_url( 'lib/vendor/dist/dompurify/dist/purify.min.js' ), [], WPB_VC_VERSION, true );
 
 		vc_modules_manager()->register_modules_script();
 
@@ -983,6 +1033,7 @@ class Vc_Frontend_Editor extends Vc_Editor {
 			'webfont',
 			'vc_accordion_script',
 			'wpb-popper',
+			'wpb-dompurify',
 			'vc-frontend-editor-min-js',
 			'wpb-modules-js',
 			'ace-editor',
@@ -993,6 +1044,11 @@ class Vc_Frontend_Editor extends Vc_Editor {
 			vc_user_access()->part( 'shortcodes' )->can( 'vc_single_image_all' )->get() === true
 		) {
 			$dependencies[] = 'vc-image-drop';
+		}
+
+		// Conditionally add mousetrap when shortcuts are enabled.
+		if ( Vc_Settings::areShortcutsEnabled() ) {
+			$dependencies[] = 'mousetrap';
 		}
 
 		$common = apply_filters( 'vc_enqueue_frontend_editor_js', array_merge( $wp_dependencies, $dependencies ) );
@@ -1008,14 +1064,16 @@ class Vc_Frontend_Editor extends Vc_Editor {
 	 */
 	public function registerCss() {
 		wp_register_style( 'ui-custom-theme', vc_asset_url( 'css/jquery-ui-less.custom.min.css' ), false, WPB_VC_VERSION );
-		wp_register_style( 'vc_animate-css', vc_asset_url( 'lib/vendor/node_modules/animate.css/animate.min.css' ), false, WPB_VC_VERSION, 'screen' );
-		wp_register_style( 'vc_font_awesome_5_shims', vc_asset_url( 'lib/vendor/node_modules/@fortawesome/fontawesome-free/css/v4-shims.min.css' ), [], WPB_VC_VERSION );
-		wp_register_style( 'vc_font_awesome_6', vc_asset_url( 'lib/vendor/node_modules/@fortawesome/fontawesome-free/css/all.min.css' ), [ 'vc_font_awesome_5_shims' ], WPB_VC_VERSION );
+		wp_register_style( 'vc_animate-css', vc_asset_url( 'lib/vendor/dist/animate.css/animate.min.css' ), false, WPB_VC_VERSION, 'screen' );
+		wp_register_style( 'vc_font_awesome_5_shims', vc_asset_url( 'lib/vendor/dist/@fortawesome/fontawesome-free/css/v4-shims.min.css' ), [], WPB_VC_VERSION );
+		wp_register_style( 'vc_font_awesome_6', vc_asset_url( 'lib/vendor/dist/@fortawesome/fontawesome-free/css/all.min.css' ), [ 'vc_font_awesome_5_shims' ], WPB_VC_VERSION );
 		wp_register_style( 'vc_inline_css', vc_asset_url( 'css/js_composer_frontend_editor.min.css' ), [], WPB_VC_VERSION );
 		wp_register_style( 'wpb_modules_css', vc_asset_url( 'css/modules.min.css' ), [], WPB_VC_VERSION, false );
-		wp_register_style( 'pickr', vc_asset_url( 'lib/vendor/node_modules/@simonwep/pickr/dist/themes/classic.min.css' ), [], WPB_VC_VERSION, false );
-		wp_register_style( 'vc_google_fonts', 'https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,500&display=swap', [], WPB_VC_VERSION );
-		wp_register_style( 'select2', vc_asset_url( 'lib/vendor/node_modules/select2/dist/css/select2.min.css' ), [], WPB_VC_VERSION, false );
+		wp_register_style( 'pickr', vc_asset_url( 'lib/vendor/dist/@simonwep/pickr/dist/themes/classic.min.css' ), [], WPB_VC_VERSION, false );
+		// When version is added, we can't use multiple fonts, it only loads the last font from the url.
+		// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+		wp_register_style( 'vc_google_fonts', 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,500;1,14..32,500&family=Open+Sans:ital,wght@1,600&family=Roboto:wght@400;700&family=Roboto:ital,wght@1,500&family=Sora:wght@600&display=swap&ver=' . WPB_VC_VERSION, [], null );
+		wp_register_style( 'select2', vc_asset_url( 'lib/vendor/dist/select2/dist/css/select2.min.css' ), [], WPB_VC_VERSION, false );
 
 		do_action( 'wpb_after_register_frontend_editor_css', $this );
 	}
@@ -1064,7 +1122,7 @@ class Vc_Frontend_Editor extends Vc_Editor {
 	 *
 	 * @since 4.3
 	 */
-	public function enqueueMappedShortcode() {
+	public function enqueueMappedShortcode() { // phpcs:ignore:Generic.Metrics.CyclomaticComplexity.TooHigh, CognitiveComplexity.Complexity.MaximumComplexity.TooHigh
 		$user_short_codes = WPBMap::getUserShortCodes();
 		if ( is_array( $user_short_codes ) ) {
 			foreach ( $user_short_codes as $shortcode ) {
@@ -1120,7 +1178,6 @@ class Vc_Frontend_Editor extends Vc_Editor {
 		if ( ! empty( $this->post_shortcodes ) ) {
 			return;
 		}
-		$content = shortcode_unautop( trim( $content ) ); // @todo this seems not working fine.
 		$not_shortcodes = preg_split( '/' . self::shortcodesRegexp() . '/', $content );
 
 		foreach ( $not_shortcodes as $string ) {
@@ -1137,7 +1194,7 @@ class Vc_Frontend_Editor extends Vc_Editor {
 	}
 
 	/**
-	 * Parse shortcodes string.
+	 * Here we add front editor controls to post content.
 	 *
 	 * @param string $content
 	 * @param bool $is_container
@@ -1196,7 +1253,19 @@ class Vc_Frontend_Editor extends Vc_Editor {
 		$shortcode_obj = wpbakery()->getShortCode( $shortcode['tag'] );
 		$is_container = $shortcode_obj->settings( 'is_container' ) || ( null !== $shortcode_obj->settings( 'as_parent' ) && false !== $shortcode_obj->settings( 'as_parent' ) );
 		$shortcode = apply_filters( 'vc_frontend_editor_to_string', $shortcode, $shortcode_obj );
-		return sprintf( '<div class="vc_element" data-tag="%s" data-shortcode-controls="%s" data-model-id="%s">%s[%s %s]%s[/%s]%s</div>', esc_attr( $shortcode['tag'] ), esc_attr( wp_json_encode( $shortcode_obj->shortcodeClass()->getControlsList() ) ), esc_attr( $shortcode['id'] ), $this->wrapperStart(), apply_filters( 'vc_clear_shortcode_suffix', $shortcode['tag'] ), $shortcode['attrs_query'], $is_container ? '[vc_container_anchor]' . $this->parseShortcodesString( $content, $is_container, $shortcode['id'] ) : do_shortcode( $content ), apply_filters( 'vc_clear_shortcode_suffix', $shortcode['tag'] ), $this->wrapperEnd() );
+
+		return sprintf(
+			'[wpb-front-editor-control-start class="vc_element" data-tag="%s" data-shortcode-controls=%s data-model-id="%s"]%s[%s %s]%s[/%s]%s[wpb-front-editor-control-end]',
+			esc_attr( $shortcode['tag'] ),
+			implode( ',', $shortcode_obj->shortcodeClass()->getControlsList() ),
+			esc_attr( $shortcode['id'] ),
+			$this->wrapperStart(),
+			apply_filters( 'vc_clear_shortcode_suffix', $shortcode['tag'] ),
+			$shortcode['attrs_query'],
+			$is_container ? '[vc_container_anchor]' . $this->parseShortcodesString( $content, $is_container, $shortcode['id'] ) : do_shortcode( $content ),
+			apply_filters( 'vc_clear_shortcode_suffix', $shortcode['tag'] ),
+			$this->wrapperEnd()
+		);
 	}
 
 	/**
@@ -1210,16 +1279,33 @@ class Vc_Frontend_Editor extends Vc_Editor {
 	public function setFrontendEditorTransient() {
 		set_transient( 'vc_action', 'vc_editable', 10 );
 	}
-}
 
-if ( ! function_exists( 'vc_container_anchor' ) ) {
 	/**
-	 * Anchor container html.
+	 * Define front editor shortcodes controls.
 	 *
-	 * @return string
-	 * @since 4.2
+	 * @since 8.7
 	 */
-	function vc_container_anchor() {
-		return '<span class="vc_container-anchor" style="display: none;"></span>';
+	public function add_controls_shortcodes() {
+		add_shortcode('wpb-front-editor-control-start', function ( $atts ) {
+			return vc_get_template( 'editors/partials/front-editor-control-start.tpl.php', [ 'atts' => $atts ] );
+		} );
+
+		add_shortcode('wpb-front-editor-control-end', function () {
+			return vc_get_template( 'editors/partials/front-editor-control-end.tpl.php' );
+		} );
+	}
+
+	/**
+	 * Define front editor welcome block shortcode.
+	 *
+	 * @since 8.7
+	 */
+	public function add_welcome_block_shortcode() {
+		add_shortcode('wpb-front-editor-welcome-block', function () {
+			return vc_get_template(
+				'editors/partials/vc_welcome_block.tpl.php',
+				[ 'editor' => 'frontend' ]
+			);
+		} );
 	}
 }

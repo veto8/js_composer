@@ -89,7 +89,7 @@ $button_classes = [
 	'vc_btn3-style-' . $style,
 ];
 
-$button_html = $title;
+$button_html = wp_kses_post( $title );
 
 if ( '' === trim( $title ) ) {
 	$button_classes[] = 'vc_btn3-o-empty';

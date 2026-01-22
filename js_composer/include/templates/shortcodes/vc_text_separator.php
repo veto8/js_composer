@@ -92,7 +92,7 @@ if ( $icon ) {
 }
 if ( '' !== $title && 'separator_no_text' !== $layout ) {
 	$css_class .= ' vc_separator-has-text';
-	$content .= '<h4>' . $title . '</h4>';
+	$content .= '<h4>' . wp_kses_post( $title ) . '</h4>';
 }
 $wrapper_attributes = [];
 if ( ! empty( $el_id ) ) {

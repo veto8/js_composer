@@ -30,7 +30,7 @@ class WPBakeryShortCode_Vc_Cta extends WPBakeryShortCode {
 	 * @param string $content
 	 * @throws \Exception
 	 */
-	public function buildTemplate( $atts, $content ) {
+	public function buildTemplate( $atts, $content ) { // phpcs:ignore:Generic.Metrics.CyclomaticComplexity.TooHigh, CognitiveComplexity.Complexity.MaximumComplexity.TooHigh
 		$output = [];
 		$inline_css = [];
 
@@ -105,7 +105,7 @@ class WPBakeryShortCode_Vc_Cta extends WPBakeryShortCode {
 	 * @return string
 	 * @throws \Exception
 	 */
-	public function getHeading( $tag, $atts ) {
+	public function getHeading( $tag, $atts ) { // phpcs:ignore:CognitiveComplexity.Complexity.MaximumComplexity.TooHigh
 		if ( isset( $atts[ $tag ] ) && '' !== trim( $atts[ $tag ] ) ) {
 			if ( isset( $atts[ 'use_custom_fonts_' . $tag ] ) && 'true' === $atts[ 'use_custom_fonts_' . $tag ] ) {
 				$custom_heading = wpbakery()->getShortCode( 'vc_custom_heading' );
@@ -129,7 +129,7 @@ class WPBakeryShortCode_Vc_Cta extends WPBakeryShortCode {
 					$inline_css_string = ' style="' . implode( '', $inline_css ) . '"';
 				}
 
-				return '<' . $tag . $inline_css_string . '>' . $atts[ $tag ] . '</' . $tag . '>';
+				return '<' . $tag . $inline_css_string . '>' . wp_kses_post( $atts[ $tag ] ) . '</' . $tag . '>';
 			}
 		}
 
